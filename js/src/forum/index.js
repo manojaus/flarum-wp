@@ -1,7 +1,7 @@
-import app from 'flarum/app';
+import app from 'flarum/forum/app';
 
 import {ID} from '../config';
-import {intercept} from '../shared/intercept';
+import {intercept} from './intercept';
 
 app.initializers.add(ID, () => {
 	intercept();

@@ -240,11 +240,11 @@ class Core {
 		// Otherwise must register new user with empty password.
 		// An empty password is an invalid hash and will not match.
 		// Therefore all logins for that user must go through this extension.
-		$user = User::register(
-			$wpUser[static::$userMap['username']['key']],
-			$wpUser[static::$userMap['email']['key']],
-			''
-		);
+		// The joined_at time and Registered event are set by the model.
+		$user = new User();
+		$user->username = $wpUser[static::$userMap['username']['key']];
+		$user->email = $wpUser[static::$userMap['email']['key']];
+		$user->password = '';
 		$user->activate();
 		$user->save();
 		static::userManagedCreate($user, $wpUser['ID']);
@@ -276,8 +276,9 @@ class Core {
 	}
 
 	/**
-	 * Search for WordPress users with display name bit.
+	 * Search for WordPress users with display name containing bit.
 	 *
+	 * @param string $bit The search string.
 	 * @return array|null User ID's or null if DB not configured.
 	 */
 	public function displayNameSearch(string $bit): ?array {
@@ -290,7 +291,7 @@ class Core {
 			"SELECT ID FROM `{$tbl}` WHERE `display_name` LIKE ?"
 		);
 		$bitEsc = $db->escLike($bit);
-		$stmt->execute(["{$bitEsc}%"]);
+		$stmt->execute(["%{$bitEsc}%"]);
 		return $stmt->fetchAll(Db::FETCH_COLUMN);
 	}
 

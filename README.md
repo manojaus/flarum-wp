@@ -16,6 +16,13 @@ Because there is only one session cookie, when the user logs out they are logged
 Also want to use the same avatars that WordPress does? Check out my [flarum-gravatar](https://github.com/AlexanderOMara/flarum-gravatar) extension.
 
 
+# Compatibility
+
+This version requires Flarum 2.0 or later (PHP 8.3+).
+
+For Flarum 1.x, use a release from before the Flarum 2.0 port.
+
+
 # Installation
 
 1.  Install WordPress.

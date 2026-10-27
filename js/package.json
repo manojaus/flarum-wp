@@ -5,8 +5,8 @@
 		"build": "webpack --mode production"
 	},
 	"devDependencies": {
-		"flarum-webpack-config": "^2.0.2",
-		"webpack": "^5.97.1",
+		"flarum-webpack-config": "^3.0.7",
+		"webpack": "^5.104.1",
 		"webpack-cli": "^6.0.1"
 	}
 }
