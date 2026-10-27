@@ -10,6 +10,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\LoggedOut;
 use Flarum\User\User;
 use Illuminate\Contracts\Events\Dispatcher as EventsDispatcher;
+use Illuminate\Contracts\Session\Session;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
@@ -123,7 +124,7 @@ class Authenticate implements Middleware {
 				$session &&
 				Core::sessionUserIdGet($session) !== $wpActor->id
 			) {
-				$this->authenticator->logOut($session);
+				$this->logOutSession($session);
 				$this->authenticator->logIn($session, new AccessToken());
 				Core::sessionUserIdSet($session, $wpActor->id);
 			}
@@ -138,7 +139,7 @@ class Authenticate implements Middleware {
 				$sessionId !== null &&
 				$sessionId !== ($actor->isGuest() ? null : $actor->id)
 			) {
-				$this->authenticator->logOut($session);
+				$this->logOutSession($session);
 				Core::sessionUserIdSet($session, null);
 			}
 		}
@@ -147,6 +148,23 @@ class Authenticate implements Middleware {
 		$this->loggedOut = null;
 		$this->events->listen(LoggedOut::class, [$this, 'onLoggedOut']);
 		return $this->maybeRedirectLogout($request, $handler->handle($request));
+	}
+
+	/**
+	 * Log out of the session, which may not have an access token.
+	 *
+	 * @param Session $session Session object.
+	 */
+	protected function logOutSession(Session $session): void {
+		// Only log out with a token, SessionAuthenticator requires one.
+		// Otherwise do the rest of the logout process directly.
+		if ($session->get('access_token') !== null) {
+			$this->authenticator->logOut($session);
+		}
+		else {
+			$session->invalidate();
+			$session->regenerateToken();
+		}
 	}
 
 	/**
@@ -228,8 +246,12 @@ class Authenticate implements Middleware {
 
 		// Update the last seen time on the actor if exists.
 		// Based on AuthenticateWithSession->getActor().
+		// Only save if changed, last seen updates are throttled.
 		if ($actor && $actor->exists) {
-			$actor->updateLastSeen()->save();
+			$actor->updateLastSeen();
+			if ($actor->isDirty()) {
+				$actor->save();
+			}
 		}
 		return $actor;
 	}

@@ -2,12 +2,12 @@
 
 use Flarum\Extend;
 use Flarum\Http\Middleware as HttpMiddleware;
+use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\User\Event\Saving;
 use Flarum\User\Search\UserSearcher;
-use Illuminate\Contracts\Events\Dispatcher;
 
+use AlexanderOMara\FlarumWPUsers\Controller;
 use AlexanderOMara\FlarumWPUsers\Core;
-use AlexanderOMara\FlarumWPUsers\Extenders;
 use AlexanderOMara\FlarumWPUsers\Events;
 use AlexanderOMara\FlarumWPUsers\Listener;
 use AlexanderOMara\FlarumWPUsers\Middleware;
@@ -24,8 +24,7 @@ return [
 		->js(__DIR__ . '/js/dist/forum.js')
 		->content(Listener\AddData::class),
 	(new Extend\Frontend('admin'))
-		->js(__DIR__ . '/js/dist/admin.js')
-		->content(Listener\AddData::class),
+		->js(__DIR__ . '/js/dist/admin.js'),
 
 	// Middleware.
 	(new Extend\Middleware('forum'))
@@ -48,9 +47,27 @@ return [
 	(new Extend\Event())
 		->listen(Saving::class, Events\UserSaving::class),
 
-	// Extenders.
-	new Extenders\RoutesApi(),
-	new Extenders\RoutesForum(),
+	// Routes.
+	(new Extend\Routes('api'))
+		->remove('forgot')
+		->post(
+			'/forgot',
+			'forgot',
+			Controller\ForgotPasswordController::class
+		),
+	(new Extend\Routes('forum'))
+		->remove('register')
+		->post(
+			'/register',
+			'register',
+			Controller\RegisterController::class
+		)
+		->remove('logout')
+		->post(
+			'/logout',
+			'logout',
+			Controller\LogOutController::class
+		),
 
 	// Display name.
 	(new Extend\User())
@@ -58,6 +75,6 @@ return [
 			Core::DISPLAY_NAME_DRIVER,
 			DisplayName\Driver::class
 		),
-	(new Extend\SimpleFlarumSearch(UserSearcher::class))
-		->setFullTextGambit(DisplayName\FullTextGambit::class)
+	(new Extend\SearchDriver(DatabaseSearchDriver::class))
+		->setFulltext(UserSearcher::class, DisplayName\FulltextFilter::class)
 ];

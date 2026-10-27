@@ -3,6 +3,7 @@
 namespace AlexanderOMara\FlarumWPUsers\Listener;
 
 use Flarum\Frontend\Document;
+use Flarum\Http\RequestUtil;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 use AlexanderOMara\FlarumWPUsers\Core;
@@ -34,6 +35,6 @@ class AddData {
 	 * @param Request $request Request object.
 	 */
 	public function __invoke(Document $view, Request $request): void {
-		$this->core->addPayload($view, $request->getAttribute('actor'));
+		$this->core->addPayload($view, RequestUtil::getActor($request));
 	}
 }
